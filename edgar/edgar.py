@@ -4,6 +4,8 @@ import yaml
 import datetime
 
 
+VERSION = "0.1"
+
 VALID_SSH_OPTIONS = {
     "AddKeysToAgent",
     "AddressFamily",
@@ -208,4 +210,4 @@ in `~/.edgarrc`. This source file must be a valid YAML document."""
 
 
 if __name__ == "__main__":
-    Edgar().write()
+    print(Edgar())

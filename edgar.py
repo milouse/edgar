@@ -78,6 +78,7 @@ VALID_SSH_OPTIONS = {
     "VerifyHostKeyDNS",
     "VisualHostKey",
     "XAuthLocation",
+    "ViaProxy"
 }
 
 
@@ -168,6 +169,9 @@ in `~/.edgarrc`. This source file must be a valid YAML document."""
                 value = str(value)
             elif curitem is not None:
                 value = value.format(item=curitem)
+            if opt == "ViaProxy":
+                opt = "ProxyCommand"
+                value = "ssh -W %h:%p " + value
             optline = "{option} {value}".format(option=opt, value=value)
             self.config[name].add(optline)
 

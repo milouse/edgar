@@ -1,0 +1,5 @@
+.eggs
+build
+dist
+edgar.egg-info
+__pycache__

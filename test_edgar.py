@@ -1,0 +1,163 @@
+import os
+import unittest
+from unittest.mock import patch
+from edgar import Edgar
+
+
+def local_expanduser(path):
+    return path.replace("~/", "")
+
+
+@patch('os.path.expanduser', side_effect=local_expanduser)
+class TestEdgar(unittest.TestCase):
+    def tearDown(self):
+        os.unlink(".edgarrc")
+
+    def test_01_parse(self, mock_path):
+        test = """---
+- Host: name
+  HostName: 127.0.0.1
+"""
+        with open(".edgarrc", "w") as f:
+            f.write(test)
+        e = Edgar()
+        self.assertIn("name", e.config.keys())
+        result = "Host name\n  HostName 127.0.0.1"
+        self.assertEqual(str(e), result.strip())
+
+    def test_02_parse(self, mock_path):
+        test = """---
+Compression: yes
+hosts:
+- Host: name
+  HostName: 127.0.0.1
+"""
+        with open(".edgarrc", "w") as f:
+            f.write(test)
+        e = Edgar()
+        result = """
+Host *
+  Compression yes
+
+Host name
+  HostName 127.0.0.1
+"""
+        self.assertEqual(str(e), result.strip())
+
+    def test_03_parse(self, mock_path):
+        test = """---
+Compression: yes
+hosts:
+- Host: name
+  HostName: 127.0.0.1
+- Host: "*"
+  CompressionLevel: 9
+"""
+        with open(".edgarrc", "w") as f:
+            f.write(test)
+        e = Edgar()
+        result = """
+Host *
+  Compression yes
+  CompressionLevel 9
+
+Host name
+  HostName 127.0.0.1
+"""
+        self.assertEqual(str(e), result.strip())
+
+    def test_04_parse(self, mock_path):
+        test = """---
+Compression: yes
+hosts:
+- Host: name
+  HostName: 127.0.0.1
+  hosts:
+  - Host: q
+    ViaProxy: env1
+    HostName: node-1
+"""
+        with open(".edgarrc", "w") as f:
+            f.write(test)
+        e = Edgar()
+        result = """
+Host *
+  Compression yes
+
+Host name
+  HostName 127.0.0.1
+
+Host nameq
+  HostName node-1
+  ProxyCommand ssh -W %h:%p env1
+"""
+        self.assertEqual(str(e), result.strip())
+
+    def test_05_parse(self, mock_path):
+        test = """---
+Compression: yes
+hosts:
+- Host: name
+  HostName: 127.0.0.1
+  hide: yes
+  hosts:
+  - Host: q
+    ViaProxy: env1
+    HostName: node-1
+"""
+        with open(".edgarrc", "w") as f:
+            f.write(test)
+        e = Edgar()
+        result = """
+Host *
+  Compression yes
+
+Host nameq
+  HostName node-1
+  ProxyCommand ssh -W %h:%p env1
+"""
+        self.assertEqual(str(e), result.strip())
+
+    def test_06_parse(self, mock_path):
+        test = """---
+Compression: yes
+hosts:
+- Host: m
+  User: nineseconds
+  Protocol: 2
+  hide: yes
+  hosts:
+  - Host: e{item}
+    HostName: 10.10.0.{item}
+    ViaProxy: gw2
+    with_items: range(2)
+- Host: blog
+  User: sa
+"""
+        with open(".edgarrc", "w") as f:
+            f.write(test)
+        e = Edgar()
+        result = """
+Host *
+  Compression yes
+
+Host me0
+  HostName 10.10.0.0
+  Protocol 2
+  ProxyCommand ssh -W %h:%p gw2
+  User nineseconds
+
+Host me1
+  HostName 10.10.0.1
+  Protocol 2
+  ProxyCommand ssh -W %h:%p gw2
+  User nineseconds
+
+Host blog
+  User sa
+"""
+        self.assertEqual(str(e), result.strip())
+
+
+if __name__ == '__main__':
+    unittest.main()

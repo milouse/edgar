@@ -11,6 +11,7 @@ VALID_SSH_OPTIONS = {
     "BindAddress",
     "ChallengeResponseAuthentication",
     "CheckHostIP",
+    "CertificateFile",
     "Cipher",
     "Ciphers",
     "Compression",
@@ -71,13 +72,12 @@ VALID_SSH_OPTIONS = {
     "Tunnel",
     "TunnelDevice",
     "UsePrivilegedPort",
+    "User",
     "UserKnownHostsFile",
+    "UseRoaming",
     "VerifyHostKeyDNS",
     "VisualHostKey",
     "XAuthLocation",
-    "User",
-    "CertificateFile",
-    "UseRoaming"
 }
 
 

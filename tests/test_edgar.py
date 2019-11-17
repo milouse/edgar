@@ -1,7 +1,7 @@
 import os
 import unittest
 from unittest.mock import patch
-from edgar import Edgar
+from edgar.edgar import Edgar
 
 
 def local_expanduser(path):

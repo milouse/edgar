@@ -1,0 +1,178 @@
+#+title: Edgar
+
+~edgar~ is a small utility to help one maintain their huge SSH config
+file. It's heavilly inspired by [[https://github.com/9seconds/concierge][concierge]] (even the tests are directly
+taken from the ~concierge~ examples!).
+
+* Installation
+
+~edgar~ only support python3. We are now in 2019!
+
+#+begin_src sh
+virtualenv edgar-venv
+source edgar-venv/bin/activate
+python setup.py install
+#+end_src
+
+* Usage
+
+Contrary to ~concierge~, there is no inotify support. The main idea is
+that you are not always modifying your SSH config file and it's not that
+hard to just call manually ~edgar~ when your config template is ready.
+
+~edgar~ rely on a config file stored in your =~/.config= folder:
+=~/.config/edgar.yml=. As its name show it, this is a YAML file.
+
+This file should contain a list of host configurations. Thus the most
+simple config file may be:
+
+#+begin_src conf
+---
+- Host: m1
+  HostName: 192.168.1.42
+  User: edgar
+- Host: m2
+  HostName: 192.168.1.43
+  User: edgar
+#+end_src
+
+Which will output the following:
+
+#+begin_src conf
+Host m1
+  HostName 192.168.1.42
+  User edgar
+
+Host m2
+  HostName 192.168.1.43
+  User edgar
+#+end_src
+
+If the main object is not a list, it is taken as a primary host
+configuration named ~*~:
+
+#+begin_src conf
+---
+Compression: yes
+ServerAliveInterval: 120
+ServerAliveCountMax: 2
+UseRoaming: no
+HashKnownHosts: yes
+IdentitiesOnly: yes
+AddKeysToAgent: yes
+
+hosts:
+- Host: m1
+  HostName: 192.168.1.42
+  User: edgar
+- Host: m2
+  HostName: 192.168.1.43
+  User: edgar
+#+end_src
+
+Which will output the following:
+
+#+begin_src conf
+Host *
+  Compression yes
+  ServerAliveInterval 120
+  ServerAliveCountMax 2
+  UseRoaming no
+  HashKnownHosts yes
+  IdentitiesOnly yes
+  AddKeysToAgent yes
+
+Host m1
+  HostName 192.168.1.42
+  User edgar
+Host m2
+  HostName 192.168.1.43
+  User edgar
+#+end_src
+
+Finally, ~edgar~ understands sub-hosts and ansible-like ~with_items~
+processing:
+
+#+begin_src conf
+---
+Compression: yes
+ServerAliveInterval: 120
+ServerAliveCountMax: 2
+UseRoaming: no
+HashKnownHosts: yes
+IdentitiesOnly: yes
+AddKeysToAgent: yes
+
+hosts:
+- Host: m
+  User: edgar
+  Protocol: 2
+  hide: yes
+  hosts:
+  - Host: e{item}
+    HostName: 10.10.0.{item}
+    ViaProxy: gw2
+    with_items: range(2)
+- Host: blog
+  User: sa
+#+end_src
+
+Which will output the following:
+
+#+begin_src conf
+Host *
+  Compression yes
+  ServerAliveInterval 120
+  ServerAliveCountMax 2
+  UseRoaming no
+  HashKnownHosts yes
+  IdentitiesOnly yes
+  AddKeysToAgent yes
+
+Host me0
+  User edgar
+  Protocol 2
+  HostName 10.10.0.0
+  ProxyCommand ssh -W %h:%p gw2
+
+Host me1
+  User edgar
+  Protocol 2
+  HostName 10.10.0.1
+  ProxyCommand ssh -W %h:%p gw2
+
+Host blog
+  User sa
+#+end_src
+
+* Reference
+
+~edgar~ understands all SSH config parameter, only if they are well
+written (there is no attempt to add missing capital).
+
+It understands the following supplementary commands:
+
+- ~hosts~ :: define a sub-host listing, each of them will inherit from
+             the current host parameters. Value must be a list of hosts
+             configurations.
+- ~hide~ :: don't create a specific host configuration for the current
+            host, only use it for factorization purpose of its
+            sub-hosts. Value must be a boolean. Default is no (false).
+- ~prefix~ :: don't concatenate the current host name with it's
+              potential sub-hosts name. Value must be a boolean. Default
+              is yes (true).
+- ~with_items~ :: define that the current host configuration must be
+                  duplicated for each item of this list. Value must be
+                  something python is able to iterate over (a list, a
+                  range expression…). You can use the ~{item}~ tag in
+                  the ~Host~ and ~Hostname~ as you wish.
+- ~ViaProxy <host>~ :: shortcut helper, which expands to
+                       ~ProxyCommand ssh -W %h:%p <host>~.
+
+* FAQ
+
+- *Edgar crash with a weird error message about YAML parser*
+  1. Don't forget to add the colon between the SSH parameter and its
+     value.
+  2. Some values must be protected, like the one with ~*~. For exemple:
+     ~Host: "*.toto.com"~.

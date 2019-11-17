@@ -123,7 +123,7 @@ Host nameq
 Compression: yes
 hosts:
 - Host: m
-  User: nineseconds
+  User: edgar
   Protocol: 2
   hide: yes
   hosts:
@@ -145,16 +145,95 @@ Host me0
   HostName 10.10.0.0
   Protocol 2
   ProxyCommand ssh -W %h:%p gw2
-  User nineseconds
+  User edgar
 
 Host me1
   HostName 10.10.0.1
   Protocol 2
   ProxyCommand ssh -W %h:%p gw2
-  User nineseconds
+  User edgar
 
 Host blog
   User sa
+"""
+        self.assertEqual(str(e), result.strip())
+
+    def test_07_hide(self, mock_path):
+        test = """---
+- Host: name
+  User: edgar
+  hide: yes
+  hosts:
+  - Host: q
+    HostName: 127.0.0.1
+  - Host: r
+    HostName: 127.0.0.2
+"""
+        with open(".edgarrc", "w") as f:
+            f.write(test)
+        e = Edgar()
+        result = """
+Host nameq
+  HostName 127.0.0.1
+  User edgar
+
+Host namer
+  HostName 127.0.0.2
+  User edgar
+"""
+        self.assertEqual(str(e), result.strip())
+
+    def test_08_prefix(self, mock_path):
+        test = """---
+- Host: name
+  User: edgar
+  prefix: no
+  hosts:
+  - Host: q
+    HostName: 127.0.0.1
+  - Host: r
+    HostName: 127.0.0.2
+"""
+        with open(".edgarrc", "w") as f:
+            f.write(test)
+        e = Edgar()
+        result = """
+Host name
+  User edgar
+
+Host q
+  HostName 127.0.0.1
+  User edgar
+
+Host r
+  HostName 127.0.0.2
+  User edgar
+"""
+        self.assertEqual(str(e), result.strip())
+
+    def test_09_hide_prefix(self, mock_path):
+        test = """---
+- Host: name
+  User: edgar
+  hide: yes
+  prefix: no
+  hosts:
+  - Host: q
+    HostName: 127.0.0.1
+  - Host: r
+    HostName: 127.0.0.2
+"""
+        with open(".edgarrc", "w") as f:
+            f.write(test)
+        e = Edgar()
+        result = """
+Host q
+  HostName 127.0.0.1
+  User edgar
+
+Host r
+  HostName 127.0.0.2
+  User edgar
 """
         self.assertEqual(str(e), result.strip())
 

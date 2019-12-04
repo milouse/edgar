@@ -81,6 +81,10 @@ VALID_SSH_OPTIONS = {
 }
 
 
+class EdgarNoConfigFileFoundError(FileNotFoundError):
+    pass
+
+
 class EdgarNotValidSSHKeywordError(KeyError):
     pass
 
@@ -93,15 +97,22 @@ optionally write the results in `~/.ssh/config`.
 
 Edgar expects its source file to be either in `~/.config/edgar.yml` or
 in `~/.edgarrc`. This source file must be a valid YAML document."""
-    def __init__(self):
+    def __init__(self, config_file=None):
+        candidates = ["~/.config/edgar.yml", "~/.edgarrc"]
+        if config_file is not None:
+            candidates.insert(0, config_file)
         self.conffile = None
-        for f in ["~/.config/edgar.yml", "~/.edgarrc"]:
+        for f in candidates:
             conffile = os.path.expanduser(f)
             if os.path.exists(conffile):
                 self.conffile = conffile
                 break
-        # The following will raise an OSError if self.conffile is still
-        # None
+        if self.conffile is None:
+            raise EdgarNoConfigFileFoundError(
+                "None of the following has been found: {}".format(
+                    ", ".join(candidates)
+                )
+            )
         with open(self.conffile) as f:
             conf = yaml.safe_load(f) or {}
         self.config = {}

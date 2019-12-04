@@ -4,8 +4,6 @@ import yaml
 import datetime
 
 
-VERSION = "0.1"
-
 VALID_SSH_OPTIONS = {
     "AddKeysToAgent",
     "AddressFamily",
@@ -207,7 +205,3 @@ in `~/.edgarrc`. This source file must be a valid YAML document."""
         for i in loopiterator:
             config["item"] = str(i)
             self.process_block(name, block, config)
-
-
-if __name__ == "__main__":
-    print(Edgar())

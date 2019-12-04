@@ -1,10 +1,26 @@
-import sys
+import edgar
 from .edgar import Edgar
+from argparse import ArgumentParser
 
 
 def run_edgar():
-    e = Edgar()
-    if len(sys.argv) > 1 and sys.argv[1] == "show":
+    parser = ArgumentParser(description=edgar.__description__)
+    parser.add_argument("-c", "--config",
+                        help="Specifies a configuration file to use.")
+    parser.add_argument("-v", "--version", action="store_true",
+                        help="Display %(prog)s version information and exit.")
+    parser.add_argument("command", nargs="?", default="store",
+                        choices=["store", "show"],
+                        help="What to do. (default writes ~/.ssh/config file)")
+    args = parser.parse_args()
+
+    if args.version:
+        print("{} - v{}".format(edgar.__description__, edgar.__version__))
+        return 0
+
+    e = Edgar(args.config)
+    if args.command == "show":
         print(e)
     else:
         e.write()
+    return 0

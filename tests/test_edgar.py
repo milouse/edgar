@@ -198,7 +198,51 @@ Host blog
 """
         self.assertEqual(str(e), result.strip())
 
-    def test_08_parse_hide_feature(self, mock_path):
+    def test_08_parse_with_items_with_dict(self, mock_path):
+        test = """---
+Compression: yes
+hosts:
+- Host: m
+  User: edgar
+  Protocol: 2
+  hide: yes
+  hosts:
+  - Host: e{item.name}
+    HostName: 10.10.0.{item.id}
+    ViaProxy: gw2
+    with_items:
+    - id: 1
+      name: toto
+    - id: 2
+      name: tata
+- Host: blog
+  User: sa
+"""
+        with open(".edgarrc", "w") as f:
+            f.write(test)
+        e = Edgar()
+        result = """
+Host *
+  Compression yes
+
+Host metoto
+  HostName 10.10.0.1
+  Protocol 2
+  ProxyCommand ssh -W %h:%p gw2
+  User edgar
+
+Host metata
+  HostName 10.10.0.2
+  Protocol 2
+  ProxyCommand ssh -W %h:%p gw2
+  User edgar
+
+Host blog
+  User sa
+"""
+        self.assertEqual(str(e), result.strip())
+
+    def test_09_parse_hide_feature(self, mock_path):
         test = """---
 - Host: name
   User: edgar
@@ -223,7 +267,7 @@ Host namer
 """
         self.assertEqual(str(e), result.strip())
 
-    def test_09_parse_prefix_feature(self, mock_path):
+    def test_10_parse_prefix_feature(self, mock_path):
         test = """---
 - Host: name
   User: edgar
@@ -251,7 +295,7 @@ Host r
 """
         self.assertEqual(str(e), result.strip())
 
-    def test_10_parse_with_hide_prefix(self, mock_path):
+    def test_11_parse_with_hide_prefix(self, mock_path):
         test = """---
 - Host: name
   User: edgar

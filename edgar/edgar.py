@@ -1,6 +1,7 @@
 import os
 import yaml
 import datetime
+from collections import namedtuple
 
 
 VALID_SSH_OPTIONS = {
@@ -168,10 +169,17 @@ in `~/.edgarrc`. This source file must be a valid YAML document."""
             content += "\n  ".join(sorted(conf)) + "\n\n"
         return content.strip()
 
+    def format_with_item(self, text, item):
+        if item is None:
+            return text
+        if isinstance(item, dict):
+            item_type = namedtuple("Item", item.keys())
+            item = item_type(**item)
+        return text.format(item=item)
+
     def store_block(self, name, block):
         curitem = block.pop("item", None)
-        if curitem is not None:
-            name = name.format(item=curitem)
+        name = self.format_with_item(name, curitem)
         if name not in self.config:
             self.config[name] = set()
         for opt, value in block.items():
@@ -179,8 +187,8 @@ in `~/.edgarrc`. This source file must be a valid YAML document."""
                 value = "yes" if value else "no"
             elif not isinstance(value, str):
                 value = str(value)
-            elif curitem is not None:
-                value = value.format(item=curitem)
+            else:
+                value = self.format_with_item(value, curitem)
             if opt == "ViaProxy":
                 opt = "ProxyCommand"
                 value = "ssh -W %h:%p " + value
@@ -215,5 +223,5 @@ in `~/.edgarrc`. This source file must be a valid YAML document."""
         if isinstance(with_items, str):
             loopiterator = eval(with_items)
         for i in loopiterator:
-            config["item"] = str(i)
+            config["item"] = i
             self.process_block(name, block, config)

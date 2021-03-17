@@ -13,7 +13,7 @@ class TestEdgar(unittest.TestCase):
     def tearDown(self):
         os.unlink(".edgarrc")
 
-    def test_01_parse(self, mock_path):
+    def test_01_simple_parse(self, mock_path):
         test = """---
 - Host: name
   HostName: 127.0.0.1
@@ -25,7 +25,7 @@ class TestEdgar(unittest.TestCase):
         result = "Host name\n  HostName 127.0.0.1"
         self.assertEqual(str(e), result.strip())
 
-    def test_02_parse(self, mock_path):
+    def test_02_simple_sub_list_parse(self, mock_path):
         test = """---
 Compression: yes
 hosts:
@@ -44,7 +44,7 @@ Host name
 """
         self.assertEqual(str(e), result.strip())
 
-    def test_03_parse(self, mock_path):
+    def test_03_parse_wildcard(self, mock_path):
         test = """---
 Compression: yes
 hosts:
@@ -66,7 +66,7 @@ Host name
 """
         self.assertEqual(str(e), result.strip())
 
-    def test_04_parse(self, mock_path):
+    def test_04_parse_sub_sub_list(self, mock_path):
         test = """---
 Compression: yes
 hosts:
@@ -93,7 +93,7 @@ Host nameq
 """
         self.assertEqual(str(e), result.strip())
 
-    def test_05_parse(self, mock_path):
+    def test_05_parse_via_proxy(self, mock_path):
         test = """---
 Compression: yes
 hosts:
@@ -118,7 +118,7 @@ Host nameq
 """
         self.assertEqual(str(e), result.strip())
 
-    def test_06_parse(self, mock_path):
+    def test_06_parse_with_items(self, mock_path):
         test = """---
 Compression: yes
 hosts:
@@ -158,7 +158,7 @@ Host blog
 """
         self.assertEqual(str(e), result.strip())
 
-    def test_07_hide(self, mock_path):
+    def test_07_parse_hide_feature(self, mock_path):
         test = """---
 - Host: name
   User: edgar
@@ -183,7 +183,7 @@ Host namer
 """
         self.assertEqual(str(e), result.strip())
 
-    def test_08_prefix(self, mock_path):
+    def test_08_parse_prefix_feature(self, mock_path):
         test = """---
 - Host: name
   User: edgar
@@ -211,7 +211,7 @@ Host r
 """
         self.assertEqual(str(e), result.strip())
 
-    def test_09_hide_prefix(self, mock_path):
+    def test_09_parse_with_hide_prefix(self, mock_path):
         test = """---
 - Host: name
   User: edgar

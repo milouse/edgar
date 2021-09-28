@@ -58,6 +58,7 @@ VALID_SSH_OPTIONS = {
     "PreferredAuthentications",
     "Protocol",
     "ProxyCommand",
+    "PubkeyAcceptedAlgorithms",
     "PubkeyAuthentication",
     "RekeyLimit",
     "RemoteForward",

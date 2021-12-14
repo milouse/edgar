@@ -9,7 +9,7 @@ taken from the ~concierge~ examples!).
 ~edgar~ only support python3. We are now in 2019!
 
 #+begin_src sh
-virtualenv edgar-venv
+python -m venv edgar-venv
 source edgar-venv/bin/activate
 python setup.py install
 #+end_src

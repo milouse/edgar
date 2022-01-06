@@ -145,7 +145,11 @@ in `~/.edgarrc`. This source file must be a valid YAML document."""
         if isinstance(hosts, list):
             for h in hosts:
                 c = config.copy()
-                c.update(h)
+                if isinstance(h, str):
+                    # We are only dealing with a list of hostname
+                    c.update({"Host": h})
+                else:
+                    c.update(h)
                 self.parse_block(c, prefix)
             return
         self.parse_block(hosts, prefix)

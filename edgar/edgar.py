@@ -99,7 +99,12 @@ Edgar compiles its source file into a valid OpenSSH config file and
 optionally write the results in `~/.ssh/config`.
 
 Edgar expects its source file to be either in `~/.config/edgar.yml` or
-in `~/.edgarrc`. This source file must be a valid YAML document."""
+in `~/.edgarrc`. This source file must be a valid YAML document. A
+specific source file can be given with the `config_file` argument.
+
+You can specifies the SSH config file name to use with `output_file`
+argument. It defaults to `~/.ssh/config`. If the value `-` is given,
+the result will be printed on the standard output."""
     def __init__(self, config_file=None, output_file=None):
         self.config_file = self.prepare_config_file(config_file)
         self.output = self.prepare_output(output_file)

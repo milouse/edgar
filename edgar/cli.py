@@ -5,8 +5,9 @@ from argparse import ArgumentParser
 
 def run_edgar():
     parser = ArgumentParser(description=edgar.__description__)
-    parser.add_argument("-c", "--config",
-                        help="Specifies a configuration file to use.")
+    parser.add_argument("-c", "--config", default="~/.config/edgar.yml",
+                        help="Specifies a configuration file to use "
+                        "(default: ~/.config/edgar.yml).")
     parser.add_argument("-o", "--output", default="~/.ssh/config",
                         help="Specifies the SSH config file name to use "
                         "(default: ~/.ssh/config). "

@@ -1,2 +1,2 @@
-__version__ = "1.1"
+__version__ = "2.0"
 __description__ = "An OpenSSH config file compiler"

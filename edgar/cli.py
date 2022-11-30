@@ -7,6 +7,10 @@ def run_edgar():
     parser = ArgumentParser(description=edgar.__description__)
     parser.add_argument("-c", "--config",
                         help="Specifies a configuration file to use.")
+    parser.add_argument("-o", "--output", default="~/.ssh/config",
+                        help="Specifies the SSH config file name to use "
+                        "(default: ~/.ssh/config). "
+                        "Use - to print on terminal.")
     parser.add_argument("-v", "--version", action="store_true",
                         help="Display %(prog)s version information and exit.")
     parser.add_argument("command", nargs="?", default="store",
@@ -18,7 +22,7 @@ def run_edgar():
         print("{} - v{}".format(edgar.__description__, edgar.__version__))
         return 0
 
-    e = Edgar(args.config)
+    e = Edgar(args.config, args.output)
     if args.command == "show":
         print(e)
     else:

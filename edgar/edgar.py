@@ -43,6 +43,7 @@ VALID_SSH_OPTIONS = {
     "HostName",
     "IdentitiesOnly",
     "IdentityFile",
+    "Include",
     "KbdInteractiveAuthentication",
     "KbdInteractiveDevices",
     "KexAlgorithms",

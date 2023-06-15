@@ -102,9 +102,19 @@ VALID_SSH_OPTIONS = {
     "UserKnownHostsFile",
     "VerifyHostKeyDNS",
     "VisualHostKey",
-    "XAuthLocation",
-    "ViaProxy"
+    "XAuthLocation"
 }
+
+
+def edgar_config_keys():
+    config_keys = {
+        "item": "item",  # Accept placeholder
+        "viaproxy": "ViaProxy"  # Accept ProxyCommand shortcut
+    }
+    config_keys.update({
+        key.lower(): key for key in VALID_SSH_OPTIONS
+    })
+    return config_keys
 
 
 class EdgarNoConfigFileFoundError(FileNotFoundError):
@@ -129,6 +139,7 @@ You can specifies the SSH config file name to use with `output_file`
 argument. It defaults to `~/.ssh/config`. If the value `-` is given,
 the result will be printed on the standard output."""
     def __init__(self, config_file=None, output_file=None):
+        self.config_keys = edgar_config_keys()
         self.config_file = self.prepare_config_file(config_file)
         self.output = self.prepare_output(output_file)
 
@@ -199,15 +210,18 @@ the result will be printed on the standard output."""
 
     def clean_block(self, block):
         cleaned_block = {}
+        possible_keys = self.config_keys.keys()
         for opt in block.keys():
+            lower_opt = opt.lower()
             if opt in ["hide", "hosts", "prefix", "with_items"]:
                 # Quietly remove edgar instructions
                 continue
-            elif opt != "item" and opt not in VALID_SSH_OPTIONS:
+            elif lower_opt not in possible_keys:
                 raise EdgarNotValidSSHKeywordError(
                     "{} is not a valid option".format(opt)
                 )
-            cleaned_block[opt] = block[opt]
+            clean_opt = self.config_keys[lower_opt]
+            cleaned_block[clean_opt] = block[opt]
         return cleaned_block
 
     def stringify(self):

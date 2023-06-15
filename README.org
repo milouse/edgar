@@ -142,8 +142,10 @@ Host blog
 
 * Reference
 
-~edgar~ understands all SSH config parameter, only if they are well
-written (there is no attempt to add missing capital).
+~edgar~ understands all config options from an up-to-date OpenSSH config
+options list. As for OpenSSH itself, option names are case
+insensitive. However, during config generation process, option names will be
+written following the OpenSSH naming convention.
 
 It understands the following supplementary commands:
 

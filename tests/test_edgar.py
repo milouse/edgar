@@ -16,7 +16,7 @@ class TestEdgar(unittest.TestCase):
     def test_01_simple_parse(self, mock_path):
         test = """---
 - Host: name
-  Hostname: 127.0.0.1
+  HostName: 127.0.0.1
 """
         with open(".edgarrc", "w") as f:
             f.write(test)
@@ -30,7 +30,7 @@ class TestEdgar(unittest.TestCase):
 Compression: yes
 hosts:
 - Host: name
-  Hostname: 127.0.0.1
+  HostName: 127.0.0.1
 """
         with open(".edgarrc", "w") as f:
             f.write(test)
@@ -49,7 +49,7 @@ Host name
 Compression: yes
 hosts:
 - Host: name
-  Hostname: 127.0.0.1
+  HostName: 127.0.0.1
 - Host: "*"
   ServerAliveCountMax: 2
 """
@@ -71,11 +71,11 @@ Host name
 Compression: yes
 hosts:
 - Host: name
-  Hostname: 127.0.0.1
+  HostName: 127.0.0.1
   hosts:
   - Host: q
     ViaProxy: env1
-    Hostname: node-1
+    HostName: node-1
 """
         with open(".edgarrc", "w") as f:
             f.write(test)
@@ -98,12 +98,12 @@ Host nameq
 Compression: yes
 hosts:
 - Host: name
-  Hostname: 127.0.0.1
+  HostName: 127.0.0.1
   hide: yes
   hosts:
   - Host: q
     ViaProxy: env1
-    Hostname: node-1
+    HostName: node-1
 """
         with open(".edgarrc", "w") as f:
             f.write(test)
@@ -127,7 +127,7 @@ hosts:
   hide: yes
   hosts:
   - Host: e{item}
-    Hostname: 10.10.0.{item}
+    HostName: 10.10.0.{item}
     ViaProxy: gw2
     with_items: [1, 2]
 - Host: blog

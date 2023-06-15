@@ -172,7 +172,7 @@ the result will be printed on the standard output."""
             f.write(header)
             f.write(self.stringify() + "\n")
 
-    def parse(self, hosts, prefix="", config={}):
+    def parse(self, hosts, config={}):
         if isinstance(hosts, list):
             for h in hosts:
                 c = config.copy()
@@ -181,9 +181,9 @@ the result will be printed on the standard output."""
                     c.update({"Host": h})
                 else:
                     c.update(h)
-                self.parse_block(c, prefix)
+                self.parse_block(c)
             return
-        self.parse_block(hosts, prefix)
+        self.parse_block(hosts)
 
     def prepare_config_file(self, config_file):
         candidates = ["~/.config/edgar.yml", "~/.edgarrc"]
@@ -218,18 +218,24 @@ the result will be printed on the standard output."""
                 continue
             elif lower_opt not in possible_keys:
                 raise EdgarNotValidSSHKeywordError(
-                    "{} is not a valid option".format(opt)
+                    f"{opt} is not a valid option"
                 )
             clean_opt = self.config_keys[lower_opt]
             cleaned_block[clean_opt] = block[opt]
         return cleaned_block
 
     def stringify(self):
-        content = ""
+        content = []
+        defaults = self.config.pop("*", None)
         for host, conf in self.config.items():
-            content += "Host {}\n  ".format(host)
-            content += "\n  ".join(sorted(conf)) + "\n\n"
-        return content.strip()
+            lines = [f"  {line}" for line in sorted(conf)]
+            lines.insert(0, f"Host {host}")
+            content.append("\n".join(lines))
+        if defaults is not None:
+            lines = [f"  {line}" for line in sorted(defaults)]
+            lines.insert(0, "Host *")
+            content.append("\n".join(lines))
+        return "\n\n".join(content).strip()
 
     def format_with_item(self, text, item):
         if item is None:
@@ -254,7 +260,7 @@ the result will be printed on the standard output."""
             if opt == "ViaProxy":
                 opt = "ProxyCommand"
                 value = "ssh -W %h:%p " + value
-            optline = "{option} {value}".format(option=opt, value=value)
+            optline = f"{opt} {value}"
             self.config[name].add(optline)
 
     def process_block(self, name, block, config):
@@ -265,17 +271,14 @@ the result will be printed on the standard output."""
             return
         if name == "*":
             self.parse(subhosts)
-        elif block.get("prefix", True):
-            self.parse(subhosts, name, config)
-        else:
-            self.parse(subhosts, "", config)
+            return
+        if block.get("prefix", True):
+            config["host_prefix"] = name
+        self.parse(subhosts, config)
 
-    def parse_block(self, block, prefix):
-        name = block.pop("Host", None)
-        if name is None:
-            name = "*"
-        else:
-            name = prefix + name
+    def parse_block(self, block):
+        prefix = block.pop("host_prefix", "")
+        name = prefix + block.pop("Host", "*")
         config = self.clean_block(block)
         with_items = block.get("with_items", None)
         if with_items is None:

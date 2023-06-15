@@ -36,11 +36,11 @@ hosts:
             f.write(test)
         e = Edgar()
         result = """
-Host *
-  Compression yes
-
 Host name
   Hostname 127.0.0.1
+
+Host *
+  Compression yes
 """
         self.assertEqual(str(e), result.strip())
 
@@ -57,12 +57,12 @@ hosts:
             f.write(test)
         e = Edgar()
         result = """
+Host name
+  Hostname 127.0.0.1
+
 Host *
   Compression yes
   ServerAliveCountMax 2
-
-Host name
-  Hostname 127.0.0.1
 """
         self.assertEqual(str(e), result.strip())
 
@@ -81,15 +81,15 @@ hosts:
             f.write(test)
         e = Edgar()
         result = """
-Host *
-  Compression yes
-
 Host name
   Hostname 127.0.0.1
 
 Host nameq
   Hostname node-1
   ProxyCommand ssh -W %h:%p env1
+
+Host *
+  Compression yes
 """
         self.assertEqual(str(e), result.strip())
 
@@ -109,12 +109,12 @@ hosts:
             f.write(test)
         e = Edgar()
         result = """
-Host *
-  Compression yes
-
 Host nameq
   Hostname node-1
   ProxyCommand ssh -W %h:%p env1
+
+Host *
+  Compression yes
 """
         self.assertEqual(str(e), result.strip())
 
@@ -137,9 +137,6 @@ hosts:
             f.write(test)
         e = Edgar()
         result = """
-Host *
-  Compression yes
-
 Host me1
   Hostname 10.10.0.1
   ProxyCommand ssh -W %h:%p gw2
@@ -152,6 +149,9 @@ Host me2
 
 Host blog
   User sa
+
+Host *
+  Compression yes
 """
         self.assertEqual(str(e), result.strip())
 
@@ -174,9 +174,6 @@ hosts:
             f.write(test)
         e = Edgar()
         result = """
-Host *
-  Compression yes
-
 Host me0
   Hostname 10.10.0.0
   ProxyCommand ssh -W %h:%p gw2
@@ -189,6 +186,9 @@ Host me1
 
 Host blog
   User sa
+
+Host *
+  Compression yes
 """
         self.assertEqual(str(e), result.strip())
 
@@ -215,9 +215,6 @@ hosts:
             f.write(test)
         e = Edgar()
         result = """
-Host *
-  Compression yes
-
 Host metoto
   Hostname 10.10.0.1
   ProxyCommand ssh -W %h:%p gw2
@@ -230,6 +227,9 @@ Host metata
 
 Host blog
   User sa
+
+Host *
+  Compression yes
 """
         self.assertEqual(str(e), result.strip())
 

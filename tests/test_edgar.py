@@ -16,13 +16,13 @@ class TestEdgar(unittest.TestCase):
     def test_01_simple_parse(self, mock_path):
         test = """---
 - Host: name
-  HostName: 127.0.0.1
+  Hostname: 127.0.0.1
 """
         with open(".edgarrc", "w") as f:
             f.write(test)
         e = Edgar()
         self.assertIn("name", e.config.keys())
-        result = "Host name\n  HostName 127.0.0.1"
+        result = "Host name\n  Hostname 127.0.0.1"
         self.assertEqual(str(e), result.strip())
 
     def test_02_simple_sub_list_parse(self, mock_path):
@@ -30,7 +30,7 @@ class TestEdgar(unittest.TestCase):
 Compression: yes
 hosts:
 - Host: name
-  HostName: 127.0.0.1
+  Hostname: 127.0.0.1
 """
         with open(".edgarrc", "w") as f:
             f.write(test)
@@ -40,7 +40,7 @@ Host *
   Compression yes
 
 Host name
-  HostName 127.0.0.1
+  Hostname 127.0.0.1
 """
         self.assertEqual(str(e), result.strip())
 
@@ -49,9 +49,9 @@ Host name
 Compression: yes
 hosts:
 - Host: name
-  HostName: 127.0.0.1
+  Hostname: 127.0.0.1
 - Host: "*"
-  CompressionLevel: 9
+  ServerAliveCountMax: 2
 """
         with open(".edgarrc", "w") as f:
             f.write(test)
@@ -59,10 +59,10 @@ hosts:
         result = """
 Host *
   Compression yes
-  CompressionLevel 9
+  ServerAliveCountMax 2
 
 Host name
-  HostName 127.0.0.1
+  Hostname 127.0.0.1
 """
         self.assertEqual(str(e), result.strip())
 
@@ -71,11 +71,11 @@ Host name
 Compression: yes
 hosts:
 - Host: name
-  HostName: 127.0.0.1
+  Hostname: 127.0.0.1
   hosts:
   - Host: q
     ViaProxy: env1
-    HostName: node-1
+    Hostname: node-1
 """
         with open(".edgarrc", "w") as f:
             f.write(test)
@@ -85,10 +85,10 @@ Host *
   Compression yes
 
 Host name
-  HostName 127.0.0.1
+  Hostname 127.0.0.1
 
 Host nameq
-  HostName node-1
+  Hostname node-1
   ProxyCommand ssh -W %h:%p env1
 """
         self.assertEqual(str(e), result.strip())
@@ -98,12 +98,12 @@ Host nameq
 Compression: yes
 hosts:
 - Host: name
-  HostName: 127.0.0.1
+  Hostname: 127.0.0.1
   hide: yes
   hosts:
   - Host: q
     ViaProxy: env1
-    HostName: node-1
+    Hostname: node-1
 """
         with open(".edgarrc", "w") as f:
             f.write(test)
@@ -113,7 +113,7 @@ Host *
   Compression yes
 
 Host nameq
-  HostName node-1
+  Hostname node-1
   ProxyCommand ssh -W %h:%p env1
 """
         self.assertEqual(str(e), result.strip())
@@ -124,11 +124,10 @@ Compression: yes
 hosts:
 - Host: m
   User: edgar
-  Protocol: 2
   hide: yes
   hosts:
   - Host: e{item}
-    HostName: 10.10.0.{item}
+    Hostname: 10.10.0.{item}
     ViaProxy: gw2
     with_items: [1, 2]
 - Host: blog
@@ -142,14 +141,12 @@ Host *
   Compression yes
 
 Host me1
-  HostName 10.10.0.1
-  Protocol 2
+  Hostname 10.10.0.1
   ProxyCommand ssh -W %h:%p gw2
   User edgar
 
 Host me2
-  HostName 10.10.0.2
-  Protocol 2
+  Hostname 10.10.0.2
   ProxyCommand ssh -W %h:%p gw2
   User edgar
 
@@ -164,11 +161,10 @@ Compression: yes
 hosts:
 - Host: m
   User: edgar
-  Protocol: 2
   hide: yes
   hosts:
   - Host: e{item}
-    HostName: 10.10.0.{item}
+    Hostname: 10.10.0.{item}
     ViaProxy: gw2
     with_items: range(2)
 - Host: blog
@@ -182,14 +178,12 @@ Host *
   Compression yes
 
 Host me0
-  HostName 10.10.0.0
-  Protocol 2
+  Hostname 10.10.0.0
   ProxyCommand ssh -W %h:%p gw2
   User edgar
 
 Host me1
-  HostName 10.10.0.1
-  Protocol 2
+  Hostname 10.10.0.1
   ProxyCommand ssh -W %h:%p gw2
   User edgar
 
@@ -204,11 +198,10 @@ Compression: yes
 hosts:
 - Host: m
   User: edgar
-  Protocol: 2
   hide: yes
   hosts:
   - Host: e{item.name}
-    HostName: 10.10.0.{item.id}
+    Hostname: 10.10.0.{item.id}
     ViaProxy: gw2
     with_items:
     - id: 1
@@ -226,14 +219,12 @@ Host *
   Compression yes
 
 Host metoto
-  HostName 10.10.0.1
-  Protocol 2
+  Hostname 10.10.0.1
   ProxyCommand ssh -W %h:%p gw2
   User edgar
 
 Host metata
-  HostName 10.10.0.2
-  Protocol 2
+  Hostname 10.10.0.2
   ProxyCommand ssh -W %h:%p gw2
   User edgar
 
@@ -249,20 +240,20 @@ Host blog
   hide: yes
   hosts:
   - Host: q
-    HostName: 127.0.0.1
+    Hostname: 127.0.0.1
   - Host: r
-    HostName: 127.0.0.2
+    Hostname: 127.0.0.2
 """
         with open(".edgarrc", "w") as f:
             f.write(test)
         e = Edgar()
         result = """
 Host nameq
-  HostName 127.0.0.1
+  Hostname 127.0.0.1
   User edgar
 
 Host namer
-  HostName 127.0.0.2
+  Hostname 127.0.0.2
   User edgar
 """
         self.assertEqual(str(e), result.strip())
@@ -274,9 +265,9 @@ Host namer
   prefix: no
   hosts:
   - Host: q
-    HostName: 127.0.0.1
+    Hostname: 127.0.0.1
   - Host: r
-    HostName: 127.0.0.2
+    Hostname: 127.0.0.2
 """
         with open(".edgarrc", "w") as f:
             f.write(test)
@@ -286,11 +277,11 @@ Host name
   User edgar
 
 Host q
-  HostName 127.0.0.1
+  Hostname 127.0.0.1
   User edgar
 
 Host r
-  HostName 127.0.0.2
+  Hostname 127.0.0.2
   User edgar
 """
         self.assertEqual(str(e), result.strip())
@@ -303,20 +294,20 @@ Host r
   prefix: no
   hosts:
   - Host: q
-    HostName: 127.0.0.1
+    Hostname: 127.0.0.1
   - Host: r
-    HostName: 127.0.0.2
+    Hostname: 127.0.0.2
 """
         with open(".edgarrc", "w") as f:
             f.write(test)
         e = Edgar()
         result = """
 Host q
-  HostName 127.0.0.1
+  Hostname 127.0.0.1
   User edgar
 
 Host r
-  HostName 127.0.0.2
+  Hostname 127.0.0.2
   User edgar
 """
         self.assertEqual(str(e), result.strip())

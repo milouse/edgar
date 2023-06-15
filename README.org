@@ -31,10 +31,10 @@ simple config file may be:
 #+begin_src conf
 ---
 - Host: m1
-  HostName: 192.168.1.42
+  Hostname: 192.168.1.42
   User: edgar
 - Host: m2
-  HostName: 192.168.1.43
+  Hostname: 192.168.1.43
   User: edgar
 #+end_src
 
@@ -42,11 +42,11 @@ Which will output the following:
 
 #+begin_src conf
 Host m1
-  HostName 192.168.1.42
+  Hostname 192.168.1.42
   User edgar
 
 Host m2
-  HostName 192.168.1.43
+  Hostname 192.168.1.43
   User edgar
 #+end_src
 
@@ -58,17 +58,16 @@ configuration named ~*~:
 Compression: yes
 ServerAliveInterval: 120
 ServerAliveCountMax: 2
-UseRoaming: no
 HashKnownHosts: yes
 IdentitiesOnly: yes
 AddKeysToAgent: yes
 
 hosts:
 - Host: m1
-  HostName: 192.168.1.42
+  Hostname: 192.168.1.42
   User: edgar
 - Host: m2
-  HostName: 192.168.1.43
+  Hostname: 192.168.1.43
   User: edgar
 #+end_src
 
@@ -79,16 +78,15 @@ Host *
   Compression yes
   ServerAliveInterval 120
   ServerAliveCountMax 2
-  UseRoaming no
   HashKnownHosts yes
   IdentitiesOnly yes
   AddKeysToAgent yes
 
 Host m1
-  HostName 192.168.1.42
+  Hostname 192.168.1.42
   User edgar
 Host m2
-  HostName 192.168.1.43
+  Hostname 192.168.1.43
   User edgar
 #+end_src
 
@@ -100,7 +98,6 @@ processing:
 Compression: yes
 ServerAliveInterval: 120
 ServerAliveCountMax: 2
-UseRoaming: no
 HashKnownHosts: yes
 IdentitiesOnly: yes
 AddKeysToAgent: yes
@@ -108,11 +105,10 @@ AddKeysToAgent: yes
 hosts:
 - Host: m
   User: edgar
-  Protocol: 2
   hide: yes
   hosts:
   - Host: e{item}
-    HostName: 10.10.0.{item}
+    Hostname: 10.10.0.{item}
     ViaProxy: gw2
     with_items: range(2)
 - Host: blog
@@ -126,21 +122,18 @@ Host *
   Compression yes
   ServerAliveInterval 120
   ServerAliveCountMax 2
-  UseRoaming no
   HashKnownHosts yes
   IdentitiesOnly yes
   AddKeysToAgent yes
 
 Host me0
   User edgar
-  Protocol 2
-  HostName 10.10.0.0
+  Hostname 10.10.0.0
   ProxyCommand ssh -W %h:%p gw2
 
 Host me1
   User edgar
-  Protocol 2
-  HostName 10.10.0.1
+  Hostname 10.10.0.1
   ProxyCommand ssh -W %h:%p gw2
 
 Host blog

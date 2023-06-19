@@ -55,7 +55,9 @@ configuration named ~*~:
 
 #+begin_src conf
 ---
+CheckHostIP: yes
 Compression: yes
+StrictHostKeyChecking: accept-new
 ServerAliveInterval: 120
 ServerAliveCountMax: 2
 HashKnownHosts: yes
@@ -63,31 +65,34 @@ IdentitiesOnly: yes
 AddKeysToAgent: yes
 
 hosts:
-- Host: m1
-  Hostname: 192.168.1.42
-  User: edgar
-- Host: m2
-  Hostname: 192.168.1.43
-  User: edgar
+  - Host: m1
+    Hostname: 192.168.1.42
+    User: edgar
+  - Host: m2
+    Hostname: 192.168.1.43
+    User: edgar
 #+end_src
 
 Which will output the following:
 
 #+begin_src conf
-Host *
-  Compression yes
-  ServerAliveInterval 120
-  ServerAliveCountMax 2
-  HashKnownHosts yes
-  IdentitiesOnly yes
-  AddKeysToAgent yes
-
 Host m1
   Hostname 192.168.1.42
   User edgar
+
 Host m2
   Hostname 192.168.1.43
   User edgar
+
+Host *
+  AddKeysToAgent yes
+  CheckHostIP yes
+  Compression yes
+  HashKnownHosts yes
+  IdentitiesOnly yes
+  ServerAliveCountMax 2
+  ServerAliveInterval 120
+  StrictHostKeyChecking accept-new
 #+end_src
 
 Finally, ~edgar~ understands sub-hosts and ansible-like ~with_items~
@@ -95,7 +100,9 @@ processing:
 
 #+begin_src conf
 ---
+CheckHostIP: yes
 Compression: yes
+StrictHostKeyChecking: accept-new
 ServerAliveInterval: 120
 ServerAliveCountMax: 2
 HashKnownHosts: yes
@@ -103,41 +110,43 @@ IdentitiesOnly: yes
 AddKeysToAgent: yes
 
 hosts:
-- Host: m
-  User: edgar
-  hide: yes
-  hosts:
-  - Host: e{item}
-    Hostname: 10.10.0.{item}
-    ViaProxy: gw2
-    with_items: range(2)
-- Host: blog
-  User: sa
+  - Host: m
+    User: edgar
+    hide: yes
+    hosts:
+      - Host: e{item}
+        Hostname: 10.10.0.{item}
+        ViaProxy: gw2
+        with_items: range(2)
+  - Host: blog
+    User: sa
 #+end_src
 
 Which will output the following:
 
 #+begin_src conf
-Host *
-  Compression yes
-  ServerAliveInterval 120
-  ServerAliveCountMax 2
-  HashKnownHosts yes
-  IdentitiesOnly yes
-  AddKeysToAgent yes
-
 Host me0
-  User edgar
   Hostname 10.10.0.0
   ProxyCommand ssh -W %h:%p gw2
+  User edgar
 
 Host me1
-  User edgar
   Hostname 10.10.0.1
   ProxyCommand ssh -W %h:%p gw2
+  User edgar
 
 Host blog
   User sa
+
+Host *
+  AddKeysToAgent yes
+  CheckHostIP yes
+  Compression yes
+  HashKnownHosts yes
+  IdentitiesOnly yes
+  ServerAliveCountMax 2
+  ServerAliveInterval 120
+  StrictHostKeyChecking accept-new
 #+end_src
 
 * Reference
@@ -145,9 +154,12 @@ Host blog
 ~edgar~ understands all config options from an up-to-date OpenSSH config
 options list. As for OpenSSH itself, option names are case
 insensitive. However, during config generation process, option names will be
-written following the OpenSSH naming convention.
+written following the OpenSSH naming convention and alphabetically sorted
+under ~Host~ or ~Match~ blocks. The ~Host~ and ~Match~ blocks order is kept as
+provided, but all "orphaned" options are gathered inside a single ~Host *~
+block, which is always output last.
 
-It understands the following supplementary commands:
+It also understands the following supplementary commands:
 
 - ~hosts~ :: define a sub-host listing, each of them will inherit from
              the current host parameters. Value must be a list of hosts

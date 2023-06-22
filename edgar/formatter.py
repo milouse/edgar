@@ -1,3 +1,4 @@
+import sys
 from collections import namedtuple
 
 from .errors import EdgarNotValidSSHKeywordError
@@ -20,6 +21,7 @@ VALID_SSH_OPTIONS = {
     "certificatefile": "CertificateFile",
     "challengeresponseauthentication": "KbdInteractiveAuthentication",
     "checkhostip": "CheckHostIP",
+    "cipher": "Deprecated",
     "ciphers": "Ciphers",
     "clearallforwardings": "ClearAllForwardings",
     "compression": "Compression",
@@ -34,6 +36,7 @@ VALID_SSH_OPTIONS = {
     "enablesshkeysign": "EnableSSHKeysign",
     "escapechar": "EscapeChar",
     "exitonforwardfailure": "ExitOnForwardFailure",
+    "fallbacktorsh": "Deprecated",
     "fingerprinthash": "FingerprintHash",
     "forkafterauthentication": "ForkAfterAuthentication",
     "forwardagent": "ForwardAgent",
@@ -42,6 +45,7 @@ VALID_SSH_OPTIONS = {
     "forwardx11trusted": "ForwardX11Trusted",
     "gatewayports": "GatewayPorts",
     "globalknownhostsfile": "GlobalKnownHostsFile",
+    "globalknownhostsfile2": "Deprecated",
     "gssapiauthentication": "GSSAPIAuthentication",
     "gssapidelegatecredentials": "GSSAPIDelegateCredentials",
     "hashknownhosts": "HashKnownHosts",
@@ -76,6 +80,7 @@ VALID_SSH_OPTIONS = {
     "pkcs11provider": "PKCS11Provider",
     "port": "Port",
     "preferredauthentications": "PreferredAuthentications",
+    "protocol": "Ignore",
     "proxycommand": "ProxyCommand",
     "proxyjump": "ProxyJump",
     "proxyusefdpass": "ProxyUseFdpass",
@@ -88,6 +93,7 @@ VALID_SSH_OPTIONS = {
     "requesttty": "RequestTTY",
     "requiredrsasize": "RequiredRSASize",
     "revokedhostkeys": "RevokedHostKeys",
+    "rhostsauthentication": "Deprecated",
     "securitykeyprovider": "SecurityKeyProvider",
     "sendenv": "SendEnv",
     "serveralivecountmax": "ServerAliveCountMax",
@@ -106,8 +112,12 @@ VALID_SSH_OPTIONS = {
     "tunnel": "Tunnel",
     "tunneldevice": "TunnelDevice",
     "updatehostkeys": "UpdateHostKeys",
+    "useprivilegedport": "Deprecated",
     "user": "User",
     "userknownhostsfile": "UserKnownHostsFile",
+    "userknownhostsfile2": "Deprecated",
+    "useroaming": "Deprecated",
+    "usersh": "Deprecated",
     "verifyhostkeydns": "VerifyHostKeyDNS",
     "visualhostkey": "VisualHostKey",
     "xauthlocation": "XAuthLocation",
@@ -140,12 +150,20 @@ def format_body_line(option, value, item):
         raise EdgarNotValidSSHKeywordError(
             f"{option} is not a valid option"
         )
-    option = VALID_SSH_OPTIONS[lower_opt]
+    clean_option = VALID_SSH_OPTIONS[lower_opt]
+    if clean_option in ["Deprecated", "Ignore"]:
+        print(
+            f"{option} is deprecated and will be ignored by OpenSSH, "
+            "you should remove it now from your configuration as it "
+            "may break in a future version.",
+            file=sys.stderr
+        )
+        return None
     value = format_value(value, item)
-    if option == "ViaProxy":
-        option = "ProxyCommand"
+    if clean_option == "ViaProxy":
+        clean_option = "ProxyCommand"
         value = "ssh -W %h:%p " + value
-    return f"{option} {value}"
+    return f"{clean_option} {value}"
 
 
 def format_block(header, body):

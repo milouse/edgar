@@ -51,10 +51,11 @@ related to a specific `Match` or `Host` option.
         )
 
     def body(self):
-        body = {
-            format_body_line(option, value, self.get("item"))
-            for option, value in self.config.items()
-        }
+        body = set()
+        for option, value in self.config.items():
+            line = format_body_line(option, value, self.get("item"))
+            if line is not None:
+                body.add(line)
         return body
 
     def children_config(self):

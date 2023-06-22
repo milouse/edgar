@@ -129,8 +129,11 @@ def format_with_item(text, item):
     if item is None:
         return text
     if isinstance(item, dict):
-        item_type = namedtuple("Item", item.keys())
-        item = item_type(**item)
+        try:
+            return text.format(**item)
+        except KeyError:
+            item_type = namedtuple("Item", item.keys())
+            item = item_type(**item)
     return text.format(item=item)
 
 

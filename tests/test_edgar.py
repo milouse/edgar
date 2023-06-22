@@ -331,7 +331,3 @@ Match Host *.example.com
   User test
 """
         self.assertEqual(str(e), result.strip())
-
-
-if __name__ == '__main__':
-    unittest.main()

@@ -136,12 +136,10 @@ def format_with_item(text, item):
 
 def format_value(value, item):
     if isinstance(value, bool):
-        value = "yes" if value else "no"
-    elif not isinstance(value, str):
+        return value and "yes" or "no"
+    if not isinstance(value, str):
         value = str(value)
-    else:
-        value = format_with_item(value, item)
-    return value
+    return format_with_item(value, item)
 
 
 def format_body_line(option, value, item):

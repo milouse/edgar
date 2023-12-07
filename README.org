@@ -55,7 +55,9 @@ configuration named ~*~:
 
 #+begin_src conf
 ---
+CheckHostIP: yes
 Compression: yes
+StrictHostKeyChecking: accept-new
 ServerAliveInterval: 120
 ServerAliveCountMax: 2
 HashKnownHosts: yes
@@ -63,31 +65,34 @@ IdentitiesOnly: yes
 AddKeysToAgent: yes
 
 hosts:
-- Host: m1
-  Hostname: 192.168.1.42
-  User: edgar
-- Host: m2
-  Hostname: 192.168.1.43
-  User: edgar
+  - Host: m1
+    Hostname: 192.168.1.42
+    User: edgar
+  - Host: m2
+    Hostname: 192.168.1.43
+    User: edgar
 #+end_src
 
 Which will output the following:
 
 #+begin_src conf
-Host *
-  Compression yes
-  ServerAliveInterval 120
-  ServerAliveCountMax 2
-  HashKnownHosts yes
-  IdentitiesOnly yes
-  AddKeysToAgent yes
-
 Host m1
   Hostname 192.168.1.42
   User edgar
+
 Host m2
   Hostname 192.168.1.43
   User edgar
+
+Host *
+  AddKeysToAgent yes
+  CheckHostIP yes
+  Compression yes
+  HashKnownHosts yes
+  IdentitiesOnly yes
+  ServerAliveCountMax 2
+  ServerAliveInterval 120
+  StrictHostKeyChecking accept-new
 #+end_src
 
 Finally, ~edgar~ understands sub-hosts and ansible-like ~with_items~
@@ -95,7 +100,9 @@ processing:
 
 #+begin_src conf
 ---
+CheckHostIP: yes
 Compression: yes
+StrictHostKeyChecking: accept-new
 ServerAliveInterval: 120
 ServerAliveCountMax: 2
 HashKnownHosts: yes
@@ -103,41 +110,43 @@ IdentitiesOnly: yes
 AddKeysToAgent: yes
 
 hosts:
-- Host: m
-  User: edgar
-  hide: yes
-  hosts:
-  - Host: e{item}
-    Hostname: 10.10.0.{item}
-    ViaProxy: gw2
-    with_items: range(2)
-- Host: blog
-  User: sa
+  - Host: m
+    User: edgar
+    hide: yes
+    hosts:
+      - Host: e{item}
+        Hostname: 10.10.0.{item}
+        ViaProxy: gw2
+        with_items: range(2)
+  - Host: blog
+    User: sa
 #+end_src
 
 Which will output the following:
 
 #+begin_src conf
-Host *
-  Compression yes
-  ServerAliveInterval 120
-  ServerAliveCountMax 2
-  HashKnownHosts yes
-  IdentitiesOnly yes
-  AddKeysToAgent yes
-
 Host me0
-  User edgar
   Hostname 10.10.0.0
   ProxyCommand ssh -W %h:%p gw2
+  User edgar
 
 Host me1
-  User edgar
   Hostname 10.10.0.1
   ProxyCommand ssh -W %h:%p gw2
+  User edgar
 
 Host blog
   User sa
+
+Host *
+  AddKeysToAgent yes
+  CheckHostIP yes
+  Compression yes
+  HashKnownHosts yes
+  IdentitiesOnly yes
+  ServerAliveCountMax 2
+  ServerAliveInterval 120
+  StrictHostKeyChecking accept-new
 #+end_src
 
 * Reference
@@ -145,26 +154,27 @@ Host blog
 ~edgar~ understands all config options from an up-to-date OpenSSH config
 options list. As for OpenSSH itself, option names are case
 insensitive. However, during config generation process, option names will be
-written following the OpenSSH naming convention.
+written following the OpenSSH naming convention and alphabetically sorted
+under ~Host~ or ~Match~ blocks. The ~Host~ and ~Match~ blocks order is kept as
+provided, but all "orphaned" options are gathered inside a single ~Host *~
+block, which is always output last.
 
-It understands the following supplementary commands:
+It also understands the following supplementary options:
 
-- ~hosts~ :: define a sub-host listing, each of them will inherit from
-             the current host parameters. Value must be a list of hosts
-             configurations.
-- ~hide~ :: don't create a specific host configuration for the current
-            host, only use it for factorization purpose of its
-            sub-hosts. Value must be a boolean. Default is no (false).
-- ~prefix~ :: don't concatenate the current host name with it's
-              potential sub-hosts name. Value must be a boolean. Default
-              is yes (true).
-- ~with_items~ :: define that the current host configuration must be
-                  duplicated for each item of this list. Value must be
-                  something python is able to iterate over (a list, a
-                  range expression…). You can use the ~{item}~ tag in
-                  the ~Host~ and ~Hostname~ as you wish.
+- ~blocks~ :: define a listing of ~Host~ or ~Match~ block, each of them will
+  inherit from the current block parameters. For historical reason, this
+  option can be named ~hosts~, but this is deprecated.
+- ~hide~ :: Whether a specific configuration for the current block should be
+  output or if it should be only used for factorization purpose of its
+  sub-block. Value must be a boolean. Default is ~no~ (false).
+- ~prefix~ :: Whether the current block name should be concatenated with it's
+  sub-blocks name. Value must be a boolean. Default is ~yes~ (true).
+- ~with_items~ :: define that the current block configuration must be
+  duplicated for each item of this list. Value must be something python is
+  able to iterate over (a list, a range expression…). You can use the ~{item}~
+  tag in any option value of the same block.
 - ~ViaProxy <host>~ :: shortcut helper, which expands to
-                       ~ProxyCommand ssh -W %h:%p <host>~.
+  ~ProxyCommand ssh -W %h:%p <host>~.
 
 * FAQ
 

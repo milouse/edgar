@@ -1,145 +1,26 @@
 import os
 import yaml
 import datetime
-from collections import namedtuple
 
-
-VALID_SSH_OPTIONS = {
-    "AddKeysToAgent",
-    "AddressFamily",
-    "BatchMode",
-    "BindAddress",
-    "BindInterface",
-    "CanonicalDomains",
-    "CanonicalizeFallbackLocal",
-    "CanonicalizeHostname",
-    "CanonicalizeMaxDots",
-    "CanonicalizePermittedCNAMEs",
-    "CASignatureAlgorithms",
-    "CertificateFile",
-    "CheckHostIP",
-    "Ciphers",
-    "ClearAllForwardings",
-    "Compression",
-    "ConnectionAttempts",
-    "ConnectTimeout",
-    "ControlMaster",
-    "ControlPath",
-    "ControlPersist",
-    "DynamicForward",
-    "EnableEscapeCommandline",
-    "EnableSSHKeysign",
-    "EscapeChar",
-    "ExitOnForwardFailure",
-    "FingerprintHash",
-    "ForkAfterAuthentication",
-    "ForwardAgent",
-    "ForwardX11",
-    "ForwardX11Timeout",
-    "ForwardX11Trusted",
-    "GatewayPorts",
-    "GlobalKnownHostsFile",
-    "GSSAPIAuthentication",
-    "GSSAPIDelegateCredentials",
-    "HashKnownHosts",
-    "Host",
-    "HostbasedAcceptedAlgorithms",
-    "HostbasedAuthentication",
-    "HostKeyAlgorithms",
-    "HostKeyAlias",
-    "Hostname",
-    "IdentitiesOnly",
-    "IdentityAgent",
-    "IdentityFile",
-    "IgnoreUnknown",
-    "Include",
-    "IPQoS",
-    "KbdInteractiveAuthentication",
-    "KbdInteractiveDevices",
-    "KexAlgorithms",
-    "KnownHostsCommand",
-    "LocalCommand",
-    "LocalForward",
-    "LogLevel",
-    "LogVerbose",
-    "MACs",
-    "Match",
-    "NoHostAuthenticationForLocalhost",
-    "NumberOfPasswordPrompts",
-    "PasswordAuthentication",
-    "PermitLocalCommand",
-    "PermitRemoteOpen",
-    "PKCS11Provider",
-    "Port",
-    "PreferredAuthentications",
-    "ProxyCommand",
-    "ProxyJump",
-    "ProxyUseFdpass",
-    "PubkeyAcceptedAlgorithms",
-    "PubkeyAuthentication",
-    "RekeyLimit",
-    "RemoteCommand",
-    "RemoteForward",
-    "RequestTTY",
-    "RequiredRSASize",
-    "RevokedHostKeys",
-    "SecurityKeyProvider",
-    "SendEnv",
-    "ServerAliveCountMax",
-    "ServerAliveInterval",
-    "SessionType",
-    "SetEnv",
-    "StdinNull",
-    "StreamLocalBindMask",
-    "StreamLocalBindUnlink",
-    "StrictHostKeyChecking",
-    "SyslogFacility",
-    "TCPKeepAlive",
-    "Tunnel",
-    "TunnelDevice",
-    "UpdateHostKeys",
-    "User",
-    "UserKnownHostsFile",
-    "VerifyHostKeyDNS",
-    "VisualHostKey",
-    "XAuthLocation"
-}
-
-
-def edgar_config_keys():
-    config_keys = {
-        "item": "item",  # Accept placeholder
-        "viaproxy": "ViaProxy"  # Accept ProxyCommand shortcut
-    }
-    config_keys.update({
-        key.lower(): key for key in VALID_SSH_OPTIONS
-    })
-    return config_keys
-
-
-class EdgarNoConfigFileFoundError(FileNotFoundError):
-    pass
-
-
-class EdgarNotValidSSHKeywordError(KeyError):
-    pass
+from .block import Block
+from .errors import EdgarNoConfigFileFoundError
+from .formatter import format_block
 
 
 class Edgar(object):
-    """A SSH config file compiler.
+    """A OpenSSH config file compiler.
 
-Edgar compiles its source file into a valid OpenSSH config file and
-optionally write the results in `~/.ssh/config`.
+Edgar compiles its source file into a valid OpenSSH client config file
+and optionally write the results in `~/.ssh/config`.
 
 Edgar expects its source file to be either in `~/.config/edgar.yml` or
-in `~/.edgarrc`. This source file must be a valid YAML document. A
+in `~/.edgarrc`.  This source file must be a valid YAML document.  A
 specific source file can be given with the `config_file` argument.
 
-You can specifies the SSH config file name to use with `output_file`
-argument. It defaults to `~/.ssh/config`. If the value `-` is given,
-the result will be printed on the standard output."""
+You can specifies the OpenSSH client config file name to use with
+`output_file` argument.  It defaults to `~/.ssh/config`.  If the value
+`-` is given, the result will be printed on the standard output."""
     def __init__(self, config_file=None, output_file=None):
-        self.config_keys = edgar_config_keys()
         self.config_file = self.prepare_config_file(config_file)
         self.output = self.prepare_output(output_file)
 
@@ -208,85 +89,37 @@ the result will be printed on the standard output."""
             return "-"
         return os.path.expanduser(output)
 
-    def clean_block(self, block):
-        cleaned_block = {}
-        possible_keys = self.config_keys.keys()
-        for opt in block.keys():
-            lower_opt = opt.lower()
-            if opt in ["hide", "hosts", "prefix", "with_items"]:
-                # Quietly remove edgar instructions
-                continue
-            elif lower_opt not in possible_keys:
-                raise EdgarNotValidSSHKeywordError(
-                    f"{opt} is not a valid option"
-                )
-            clean_opt = self.config_keys[lower_opt]
-            cleaned_block[clean_opt] = block[opt]
-        return cleaned_block
-
     def stringify(self):
         content = []
-        defaults = self.config.pop("*", None)
-        for host, conf in self.config.items():
-            lines = [f"  {line}" for line in sorted(conf)]
-            lines.insert(0, f"Host {host}")
-            content.append("\n".join(lines))
+        defaults = self.config.pop("Host *", None)
+        for header, body in self.config.items():
+            content.append(format_block(header, body))
         if defaults is not None:
-            lines = [f"  {line}" for line in sorted(defaults)]
-            lines.insert(0, "Host *")
-            content.append("\n".join(lines))
+            content.append(format_block("Host *", defaults))
         return "\n\n".join(content).strip()
 
-    def format_with_item(self, text, item):
-        if item is None:
-            return text
-        if isinstance(item, dict):
-            item_type = namedtuple("Item", item.keys())
-            item = item_type(**item)
-        return text.format(item=item)
-
-    def store_block(self, name, block):
-        curitem = block.pop("item", None)
-        name = self.format_with_item(name, curitem)
+    def store_block(self, block):
+        if block.get("hide"):
+            return
+        name = block.header()
         if name not in self.config:
             self.config[name] = set()
-        for opt, value in block.items():
-            if isinstance(value, bool):
-                value = "yes" if value else "no"
-            elif not isinstance(value, str):
-                value = str(value)
-            else:
-                value = self.format_with_item(value, curitem)
-            if opt == "ViaProxy":
-                opt = "ProxyCommand"
-                value = "ssh -W %h:%p " + value
-            optline = f"{opt} {value}"
-            self.config[name].add(optline)
+        self.config[name] |= block.body()
 
-    def process_block(self, name, block, config):
-        if not block.get("hide", False):
-            self.store_block(name, config)
-        subhosts = block.get("hosts", [])
-        if len(subhosts) == 0:
+    def process_block(self, block_options):
+        block = Block(block_options)
+        self.store_block(block)
+        subblocks = block.get("blocks", []) or []
+        if len(subblocks) == 0:
             return
-        if name == "*":
-            self.parse(subhosts)
-            return
-        if block.get("prefix", True):
-            config["host_prefix"] = name
-        self.parse(subhosts, config)
+        self.parse(subblocks, block.children_config())
 
-    def parse_block(self, block):
-        prefix = block.pop("host_prefix", "")
-        name = prefix + block.pop("Host", "*")
-        config = self.clean_block(block)
-        with_items = block.get("with_items", None)
-        if with_items is None:
-            self.process_block(name, block, config)
-            return
-        loopiterator = with_items
+    def parse_block(self, block_options):
+        with_items = block_options.pop("with_items", [None])
         if isinstance(with_items, str):
             loopiterator = eval(with_items)
-        for i in loopiterator:
-            config["item"] = i
-            self.process_block(name, block, config)
+        else:
+            loopiterator = with_items
+        for item in loopiterator:
+            block_options["item"] = item
+            self.process_block(block_options.copy())

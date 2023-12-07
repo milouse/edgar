@@ -21,7 +21,7 @@ class TestEdgar(unittest.TestCase):
         with open(".edgarrc", "w") as f:
             f.write(test)
         e = Edgar()
-        self.assertIn("name", e.config.keys())
+        self.assertIn("Host name", e.config.keys())
         result = "Host name\n  Hostname 127.0.0.1"
         self.assertEqual(str(e), result.strip())
 
@@ -312,6 +312,22 @@ Host r
 """
         self.assertEqual(str(e), result.strip())
 
+    def test_12_parse_match_block(self, mock_path):
+        test = """---
+- Host: name
+  HostName: 127.0.0.1
 
-if __name__ == '__main__':
-    unittest.main()
+- Match: "Host *.example.com"
+  User: test
+"""
+        with open(".edgarrc", "w") as f:
+            f.write(test)
+        e = Edgar()
+        result = """
+Host name
+  Hostname 127.0.0.1
+
+Match Host *.example.com
+  User test
+"""
+        self.assertEqual(str(e), result.strip())

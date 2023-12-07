@@ -29,3 +29,7 @@ def run_edgar():
     else:
         e.write()
     return 0
+
+
+if __name__ == "__main__":
+    run_edgar()

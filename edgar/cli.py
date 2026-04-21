@@ -4,7 +4,7 @@ from argparse import ArgumentParser
 
 
 def run_edgar():
-    parser = ArgumentParser(description=edgar.__description__)
+    parser = ArgumentParser(description=edgar.__doc__)
     parser.add_argument("-c", "--config", default="~/.config/edgar.yml",
                         help="Specifies a configuration file to use "
                         "(default: ~/.config/edgar.yml).")
@@ -20,7 +20,7 @@ def run_edgar():
     args = parser.parse_args()
 
     if args.version:
-        print("{} - v{}".format(edgar.__description__, edgar.__version__))
+        print("{} - v{}".format(edgar.__doc__, edgar.__version__))
         return 0
 
     e = Edgar(args.config, args.output)

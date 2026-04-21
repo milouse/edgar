@@ -13,38 +13,41 @@ class TestEdgar(unittest.TestCase):
     def tearDown(self):
         os.unlink(".edgarrc")
 
-    def test_01_simple_parse(self, mock_path):
+    def edgar_instance(self, config):
+        with open(".edgarrc", "w") as f:
+            f.write(config)
+        return Edgar()
+
+    def assertEdgarConfMatch(self, config, result):
+        e = self.edgar_instance(config)
+        return self.assertEqual(str(e), result)
+
+    def test_simple_parse(self, mock_path):
         test = """---
 - Host: name
   HostName: 127.0.0.1
 """
-        with open(".edgarrc", "w") as f:
-            f.write(test)
-        e = Edgar()
+        e = self.edgar_instance(test)
         self.assertIn("Host name", e.config.keys())
         result = "Host name\n  Hostname 127.0.0.1"
         self.assertEqual(str(e), result.strip())
 
-    def test_02_simple_sub_list_parse(self, mock_path):
+    def test_simple_sub_list_parse(self, mock_path):
         test = """---
 Compression: yes
 hosts:
 - Host: name
   HostName: 127.0.0.1
 """
-        with open(".edgarrc", "w") as f:
-            f.write(test)
-        e = Edgar()
-        result = """
+        result = """\
 Host name
   Hostname 127.0.0.1
 
 Host *
-  Compression yes
-"""
-        self.assertEqual(str(e), result.strip())
+  Compression yes"""
+        self.assertEdgarConfMatch(test, result)
 
-    def test_03_parse_wildcard(self, mock_path):
+    def test_parse_wildcard(self, mock_path):
         test = """---
 Compression: yes
 hosts:
@@ -53,20 +56,16 @@ hosts:
 - Host: "*"
   ServerAliveCountMax: 2
 """
-        with open(".edgarrc", "w") as f:
-            f.write(test)
-        e = Edgar()
-        result = """
+        result = """\
 Host name
   Hostname 127.0.0.1
 
 Host *
   Compression yes
-  ServerAliveCountMax 2
-"""
-        self.assertEqual(str(e), result.strip())
+  ServerAliveCountMax 2"""
+        self.assertEdgarConfMatch(test, result)
 
-    def test_04_parse_sub_sub_list(self, mock_path):
+    def test_parse_sub_sub_list(self, mock_path):
         test = """---
 Compression: yes
 hosts:
@@ -77,10 +76,7 @@ hosts:
     ViaProxy: env1
     HostName: node-1
 """
-        with open(".edgarrc", "w") as f:
-            f.write(test)
-        e = Edgar()
-        result = """
+        result = """\
 Host name
   Hostname 127.0.0.1
 
@@ -89,11 +85,10 @@ Host nameq
   ProxyCommand ssh -W %h:%p env1
 
 Host *
-  Compression yes
-"""
-        self.assertEqual(str(e), result.strip())
+  Compression yes"""
+        self.assertEdgarConfMatch(test, result)
 
-    def test_05_parse_via_proxy(self, mock_path):
+    def test_parse_via_proxy(self, mock_path):
         test = """---
 Compression: yes
 hosts:
@@ -105,20 +100,16 @@ hosts:
     ViaProxy: env1
     HostName: node-1
 """
-        with open(".edgarrc", "w") as f:
-            f.write(test)
-        e = Edgar()
-        result = """
+        result = """\
 Host nameq
   Hostname node-1
   ProxyCommand ssh -W %h:%p env1
 
 Host *
-  Compression yes
-"""
-        self.assertEqual(str(e), result.strip())
+  Compression yes"""
+        self.assertEdgarConfMatch(test, result)
 
-    def test_06_parse_with_items(self, mock_path):
+    def test_parse_with_items(self, mock_path):
         test = """---
 Compression: yes
 hosts:
@@ -133,10 +124,7 @@ hosts:
 - Host: blog
   User: sa
 """
-        with open(".edgarrc", "w") as f:
-            f.write(test)
-        e = Edgar()
-        result = """
+        result = """\
 Host me1
   Hostname 10.10.0.1
   ProxyCommand ssh -W %h:%p gw2
@@ -151,11 +139,10 @@ Host blog
   User sa
 
 Host *
-  Compression yes
-"""
-        self.assertEqual(str(e), result.strip())
+  Compression yes"""
+        self.assertEdgarConfMatch(test, result)
 
-    def test_07_parse_with_items_with_range(self, mock_path):
+    def test_parse_with_items_with_range(self, mock_path):
         test = """---
 Compression: yes
 hosts:
@@ -170,10 +157,7 @@ hosts:
 - Host: blog
   User: sa
 """
-        with open(".edgarrc", "w") as f:
-            f.write(test)
-        e = Edgar()
-        result = """
+        result = """\
 Host me0
   Hostname 10.10.0.0
   ProxyCommand ssh -W %h:%p gw2
@@ -188,11 +172,10 @@ Host blog
   User sa
 
 Host *
-  Compression yes
-"""
-        self.assertEqual(str(e), result.strip())
+  Compression yes"""
+        self.assertEdgarConfMatch(test, result)
 
-    def test_08_parse_with_items_with_dict(self, mock_path):
+    def test_parse_with_items_with_dict(self, mock_path):
         test = """---
 Compression: yes
 hosts:
@@ -211,10 +194,7 @@ hosts:
 - Host: blog
   User: sa
 """
-        with open(".edgarrc", "w") as f:
-            f.write(test)
-        e = Edgar()
-        result = """
+        result = """\
 Host metoto
   Hostname 10.10.0.1
   ProxyCommand ssh -W %h:%p gw2
@@ -229,11 +209,10 @@ Host blog
   User sa
 
 Host *
-  Compression yes
-"""
-        self.assertEqual(str(e), result.strip())
+  Compression yes"""
+        self.assertEdgarConfMatch(test, result)
 
-    def test_09_parse_hide_feature(self, mock_path):
+    def test_parse_hide_feature(self, mock_path):
         test = """---
 - Host: name
   User: edgar
@@ -244,21 +223,17 @@ Host *
   - Host: r
     Hostname: 127.0.0.2
 """
-        with open(".edgarrc", "w") as f:
-            f.write(test)
-        e = Edgar()
-        result = """
+        result = """\
 Host nameq
   Hostname 127.0.0.1
   User edgar
 
 Host namer
   Hostname 127.0.0.2
-  User edgar
-"""
-        self.assertEqual(str(e), result.strip())
+  User edgar"""
+        self.assertEdgarConfMatch(test, result)
 
-    def test_10_parse_prefix_feature(self, mock_path):
+    def test_parse_prefix_feature(self, mock_path):
         test = """---
 - Host: name
   User: edgar
@@ -269,10 +244,7 @@ Host namer
   - Host: r
     Hostname: 127.0.0.2
 """
-        with open(".edgarrc", "w") as f:
-            f.write(test)
-        e = Edgar()
-        result = """
+        result = """\
 Host name
   User edgar
 
@@ -282,11 +254,10 @@ Host q
 
 Host r
   Hostname 127.0.0.2
-  User edgar
-"""
-        self.assertEqual(str(e), result.strip())
+  User edgar"""
+        self.assertEdgarConfMatch(test, result)
 
-    def test_11_parse_with_hide_prefix(self, mock_path):
+    def test_parse_with_hide_prefix(self, mock_path):
         test = """---
 - Host: name
   User: edgar
@@ -298,21 +269,17 @@ Host r
   - Host: r
     Hostname: 127.0.0.2
 """
-        with open(".edgarrc", "w") as f:
-            f.write(test)
-        e = Edgar()
-        result = """
+        result = """\
 Host q
   Hostname 127.0.0.1
   User edgar
 
 Host r
   Hostname 127.0.0.2
-  User edgar
-"""
-        self.assertEqual(str(e), result.strip())
+  User edgar"""
+        self.assertEdgarConfMatch(test, result)
 
-    def test_12_parse_match_block(self, mock_path):
+    def test_parse_match_block(self, mock_path):
         test = """---
 - Host: name
   HostName: 127.0.0.1
@@ -320,14 +287,10 @@ Host r
 - Match: "Host *.example.com"
   User: test
 """
-        with open(".edgarrc", "w") as f:
-            f.write(test)
-        e = Edgar()
-        result = """
+        result = """\
 Host name
   Hostname 127.0.0.1
 
 Match Host *.example.com
-  User test
-"""
-        self.assertEqual(str(e), result.strip())
+  User test"""
+        self.assertEdgarConfMatch(test, result)

@@ -114,12 +114,23 @@ You can specifies the OpenSSH client config file name to use with
             return
         self.parse(subblocks, block.children_config())
 
-    def parse_block(self, block_options):
-        with_items = block_options.pop("with_items", [None])
+    def with_items(self, block_options):
+        with_items = block_options.pop("loop", None)
+        if with_items is None:
+            # Legacy syntax
+            with_items = block_options.pop("with_items", None)
+        if with_items is None:
+            # No list
+            return
         if isinstance(with_items, str):
-            loopiterator = eval(with_items)
-        else:
-            loopiterator = with_items
-        for item in loopiterator:
+            return eval(with_items)
+        return with_items
+
+    def parse_block(self, block_options):
+        with_items = self.with_items(block_options)
+        if not with_items:
+            self.process_block(block_options.copy())
+            return
+        for item in with_items:
             block_options["item"] = item
             self.process_block(block_options.copy())

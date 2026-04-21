@@ -95,8 +95,8 @@ Host *
   StrictHostKeyChecking accept-new
 #+end_src
 
-Finally, ~edgar~ understands sub-hosts and ansible-like ~with_items~
-processing:
+Finally, ~edgar~ understands sub-hosts and ansible-like ~loop~ (or legacy
+~with_items~) processing:
 
 #+begin_src conf
 ---
@@ -117,7 +117,7 @@ hosts:
       - Host: e{item}
         Hostname: 10.10.0.{item}
         ViaProxy: gw2
-        with_items: range(2)
+        loop: range(2)
   - Host: blog
     User: sa
 #+end_src
@@ -164,15 +164,15 @@ It also understands the following supplementary options:
 - ~blocks~ :: define a listing of ~Host~ or ~Match~ block, each of them will
   inherit from the current block parameters. For historical reason, this
   option can be named ~hosts~, but this is deprecated.
-- ~hide~ :: Whether a specific configuration for the current block should be
+- ~hide~ :: whether a specific configuration for the current block should be
   output or if it should be only used for factorization purpose of its
   sub-block. Value must be a boolean. Default is ~no~ (false).
-- ~prefix~ :: Whether the current block name should be concatenated with it's
+- ~prefix~ :: whether the current block name should be concatenated with it's
   sub-blocks name. Value must be a boolean. Default is ~yes~ (true).
-- ~with_items~ :: define that the current block configuration must be
-  duplicated for each item of this list. Value must be something python is
-  able to iterate over (a list, a range expression…). You can use the ~{item}~
-  tag in any option value of the same block.
+- ~loop~ :: (or legacy ~with_items~) define that the current block configuration
+  must be duplicated for each item of this list. Value must be something python
+  is able to iterate over (a list, a range expression…). You can use the
+  ~{item}~ tag in any option value of the same block.
 - ~ViaProxy <host>~ :: shortcut helper, which expands to
   ~ProxyCommand ssh -W %h:%p <host>~.
 

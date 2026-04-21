@@ -212,6 +212,109 @@ Host *
   Compression yes"""
         self.assertEdgarConfMatch(test, result)
 
+    def test_parse_loop(self, mock_path):
+        test = """---
+Compression: yes
+hosts:
+- Host: m
+  User: edgar
+  hide: yes
+  hosts:
+  - Host: e{item}
+    HostName: 10.10.0.{item}
+    ViaProxy: gw2
+    loop: [1, 2]
+- Host: blog
+  User: sa
+"""
+        result = """\
+Host me1
+  Hostname 10.10.0.1
+  ProxyCommand ssh -W %h:%p gw2
+  User edgar
+
+Host me2
+  Hostname 10.10.0.2
+  ProxyCommand ssh -W %h:%p gw2
+  User edgar
+
+Host blog
+  User sa
+
+Host *
+  Compression yes"""
+        self.assertEdgarConfMatch(test, result)
+
+    def test_parse_loop_with_range(self, mock_path):
+        test = """---
+Compression: yes
+hosts:
+- Host: m
+  User: edgar
+  hide: yes
+  hosts:
+  - Host: e{item}
+    Hostname: 10.10.0.{item}
+    ViaProxy: gw2
+    loop: range(2)
+- Host: blog
+  User: sa
+"""
+        result = """\
+Host me0
+  Hostname 10.10.0.0
+  ProxyCommand ssh -W %h:%p gw2
+  User edgar
+
+Host me1
+  Hostname 10.10.0.1
+  ProxyCommand ssh -W %h:%p gw2
+  User edgar
+
+Host blog
+  User sa
+
+Host *
+  Compression yes"""
+        self.assertEdgarConfMatch(test, result)
+
+    def test_parse_loop_with_dict(self, mock_path):
+        test = """---
+Compression: yes
+hosts:
+- Host: m
+  User: edgar
+  hide: yes
+  hosts:
+  - Host: e{item.name}
+    Hostname: 10.10.0.{item.id}
+    ViaProxy: gw2
+    loop:
+    - id: 1
+      name: toto
+    - id: 2
+      name: tata
+- Host: blog
+  User: sa
+"""
+        result = """\
+Host metoto
+  Hostname 10.10.0.1
+  ProxyCommand ssh -W %h:%p gw2
+  User edgar
+
+Host metata
+  Hostname 10.10.0.2
+  ProxyCommand ssh -W %h:%p gw2
+  User edgar
+
+Host blog
+  User sa
+
+Host *
+  Compression yes"""
+        self.assertEdgarConfMatch(test, result)
+
     def test_parse_hide_feature(self, mock_path):
         test = """---
 - Host: name

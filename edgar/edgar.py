@@ -71,14 +71,18 @@ You can specifies the OpenSSH client config file name to use with
         if config_file is not None:
             candidates.insert(0, config_file)
 
+        checked_files = []
         for f in candidates:
             conffile = os.path.expanduser(f)
+            if conffile in checked_files:
+                continue
             if os.path.exists(conffile):
                 return conffile
+            checked_files.append(conffile)
 
         raise EdgarNoConfigFileFoundError(
             "None of the following has been found: {}".format(
-                ", ".join(candidates)
+                ", ".join(checked_files)
             )
         )
 
